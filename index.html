@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PizzaDelivery Mini App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: rgba(20, 20, 20, 0.95);
+            --gold: #ffd700;
+            --gold-dark: #ff8c00;
+            --red: #ff4500;
+            --text: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Админ панель */
+        .admin-badge {
+            background: linear-gradient(135deg, var(--gold), var(--red));
+            color: white;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        /* Контейнеры */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--gold), var(--red));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        /* Карточки */
+        .card {
+            background: var(--bg-card);
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Сетка */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Статистика */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Форма заказа */
+        .phone-input {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .phone-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--gold), var(--red));
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Список сервисов */
+        .services-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .service-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        /* Прогресс */
+        .progress-container {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), var(--red));
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Лог результатов */
+        .results-log {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log-success { color: #00ff00; }
+        .log-error { color: #ff4444; }
+
+        /* Профиль */
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-label {
+            color: var(--text-secondary);
+        }
+
+        .profile-value {
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+
+        /* Админ панель */
+        .admin-section {
+            margin-top: 30px;
+            border-top: 2px solid rgba(255, 215, 0, 0.3);
+            padding-top: 30px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .admin-card {
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .admin-card:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Таблицы */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table th {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 25px;
+            padding: 25px;
+            max-width: 500px;
+            margin: 50px auto;
+        }
+
+        /* Telegram Mini App поддержка */
+        .telegram-button {
+            background: var(--tg-theme-button-color, var(--gold));
+            color: var(--tg-theme-button-text-color, white);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <div class="header">
+            <h1>🍕 PizzaDelivery</h1>
+            <div id="userGreeting"></div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-item">
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">Пользователей</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalAttacks">0</div>
+                <div class="stat-label">Заказов</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="successRate">0%</div>
+                <div class="stat-label">Успешно</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalServices">0</div>
+                <div class="stat-label">Сервисов</div>
+            </div>
+        </div>
+
+        <!-- Основная сетка -->
+        <div class="grid">
+            <!-- Карточка заказа -->
+            <div class="card">
+                <h2>🍕 Оформить заказ</h2>
+                
+                <input type="tel" class="phone-input" id="phoneInput" placeholder="+7 (999) 123-45-67" value="+79991234567">
+                
+                <button class="btn" id="orderBtn" onclick="startOrder()">
+                    ЗАКАЗАТЬ ПИЦЦУ
+                </button>
+
+                <!-- Прогресс -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px;" id="progressText">0/0</div>
+                </div>
+
+                <!-- Результаты -->
+                <div class="results-log" id="resultsLog"></div>
+            </div>
+
+            <!-- Профиль -->
+            <div class="card">
+                <h2>👤 Профиль</h2>
+                
+                <div class="profile-row">
+                    <span class="profile-label">ID:</span>
+                    <span class="profile-value" id="profileId">-</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Имя:</span>
+                    <span class="profile-value" id="profileName">-</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Username:</span>
+                    <span class="profile-value" id="profileUsername">-</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Статус:</span>
+                    <span class="profile-value">
+                        <span class="status-badge" id="profileStatus">-</span>
+                    </span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Подписка:</span>
+                    <span class="profile-value" id="profileSub">-</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Ваши заказы:</span>
+                    <span class="profile-value" id="profileOrders">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сервисы -->
+        <div class="card">
+            <h2>🏪 Наши партнеры</h2>
+            <div class="services-list" id="servicesList"></div>
+        </div>
+
+        <!-- АДМИН ПАНЕЛЬ (видна только админу) -->
+        <div id="adminPanel" style="display: none;">
+            <div class="admin-badge">👑 АДМИН ПАНЕЛЬ</div>
+            
+            <div class="admin-grid">
+                <div class="admin-card" onclick="showUsers()">
+                    <h3>👥 Пользователи</h3>
+                    <p id="adminUsersCount">0</p>
+                </div>
+                <div class="admin-card" onclick="showAttacks()">
+                    <h3>🔥 Атаки</h3>
+                    <p id="adminAttacksCount">0</p>
+                </div>
+                <div class="admin-card" onclick="showMailing()">
+                    <h3>📢 Рассылка</h3>
+                    <p>Отправить всем</p>
+                </div>
+                <div class="admin-card" onclick="showSubs()">
+                    <h3>📱 Подписки</h3>
+                    <p id="adminSubsCount">0</p>
+                </div>
+                <div class="admin-card" onclick="showStats()">
+                    <h3>📊 Детально</h3>
+                    <p>Подробная статистика</p>
+                </div>
+                <div class="admin-card" onclick="clearLogs()">
+                    <h3>🗑 Очистить</h3>
+                    <p>Сброс данных</p>
+                </div>
+            </div>
+
+            <!-- Таблица пользователей (скрыта по умолчанию) -->
+            <div id="usersTable" style="display: none;">
+                <h3>Список пользователей</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя</th>
+                            <th>Username</th>
+                            <th>Подписка</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Рассылка (скрыта по умолчанию) -->
+            <div id="mailingForm" style="display: none;">
+                <h3>📢 Рассылка</h3>
+                <textarea id="mailingText" class="phone-input" rows="4" placeholder="Текст для рассылки..."></textarea>
+                <button class="btn" onclick="sendMailing()">Отправить всем</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <script>
+        // Telegram WebApp
+        let tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.ready();
+        }
+
+        // Данные пользователя
+        let currentUser = null;
+        let isAdmin = false;
+        let services = [];
+
+        // Получение параметров из URL
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                user_id: params.get('user_id'),
+                first_name: params.get('first_name'),
+                admin: params.get('admin') === '1'
+            };
+        }
+
+        // Загрузка данных пользователя
+        async function loadUserData() {
+            const params = getUrlParams();
+            
+            // Если есть данные от Telegram
+            if (tg?.initDataUnsafe?.user) {
+                const user = tg.initDataUnsafe.user;
+                params.user_id = user.id;
+                params.first_name = user.first_name;
+            }
+
+            if (!params.user_id) {
+                document.getElementById('userGreeting').innerHTML = 
+                    '❌ Открой через Telegram бота';
+                return;
+            }
+
+            // Загружаем данные с сервера
+            const response = await fetch(`/api/user/${params.user_id}`);
+            const data = await response.json();
+            
+            currentUser = data;
+            isAdmin = data.is_admin || params.admin;
+
+            // Обновляем UI
+            document.getElementById('profileId').textContent = data.id;
+            document.getElementById('profileName').textContent = data.first_name || '-';
+            document.getElementById('profileUsername').textContent = '@' + (data.username || '-');
+            
+            const statusEl = document.getElementById('profileStatus');
+            statusEl.textContent = data.has_access ? 'АКТИВЕН' : 'НЕТ ДОСТУПА';
+            statusEl.className = 'status-badge ' + (data.has_access ? 'status-active' : '');
+            
+            document.getElementById('profileSub').textContent = data.is_subscribed ? '✅ Есть' : '❌ Нет';
+            document.getElementById('profileOrders').textContent = data.stats?.user_attacks || 0;
+
+            document.getElementById('userGreeting').innerHTML = 
+                `👋 Привет, ${data.first_name || 'пользователь'}!`;
+
+            // Показываем админ панель
+            if (isAdmin) {
+                document.getElementById('adminPanel').style.display = 'block';
+                loadAdminData();
+            }
+        }
+
+        // Загрузка статистики
+        async function loadStats() {
+            const response = await fetch('/api/stats');
+            const data = await response.json();
+            
+            document.getElementById('totalUsers').textContent = data.total_users;
+            document.getElementById('totalAttacks').textContent = data.total_attacks;
+            document.getElementById('successRate').textContent = data.success_rate + '%';
+            document.getElementById('totalServices').textContent = data.services;
+        }
+
+        // Загрузка сервисов
+        async function loadServices() {
+            const response = await fetch('/api/services');
+            services = await response.json();
+            
+            const list = document.getElementById('servicesList');
+            list.innerHTML = services.map(s => 
+                `<div class="service-item">🍕 ${s}</div>`
+            ).join('');
+        }
+
+        // Запуск заказа
+        async function startOrder() {
+            const phone = document.getElementById('phoneInput').value;
+            
+            if (!currentUser || !currentUser.has_access) {
+                alert('❌ Нет доступа! Подпишись на канал.');
+                return;
+            }
+
+            const orderBtn = document.getElementById('orderBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const resultsLog = document.getElementById('resultsLog');
+            
+            orderBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            resultsLog.innerHTML = '';
+
+            // Имитация отправки запросов
+            let current = 0;
+            const total = services.length;
+            const results = [];
+
+            const interval = setInterval(() => {
+                if (current < total) {
+                    current++;
+                    const percent = (current / total) * 100;
+                    document.getElementById('progressFill').style.width = percent + '%';
+                    document.getElementById('progressText').textContent = `${current}/${total}`;
+
+                    const isSuccess = Math.random() > 0.2;
+                    const service = services[current - 1];
+                    
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry ' + (isSuccess ? 'log-success' : 'log-error');
+                    entry.textContent = `${isSuccess ? '✅' : '❌'} ${service}`;
+                    resultsLog.appendChild(entry);
+                    resultsLog.scrollTop = resultsLog.scrollHeight;
+
+                    if (isSuccess) results.push(service);
+                } else {
+                    clearInterval(interval);
+                    orderBtn.disabled = false;
+                    
+                    const finalEntry = document.createElement('div');
+                    finalEntry.className = 'log-entry log-success';
+                    finalEntry.textContent = `✅ Заказ оформлен! Успешно: ${results.length}/${total}`;
+                    resultsLog.appendChild(finalEntry);
+                    
+                    // Обновляем статистику
+                    loadStats();
+                }
+            }, 300);
+        }
+
+        // Админ функции
+        async function loadAdminData() {
+            if (!isAdmin) return;
+
+            const response = await fetch(`/api/admin/stats?user_id=${currentUser.id}`);
+            const data = await response.json();
+
+            document.getElementById('adminUsersCount').textContent = Object.keys(data.users.users || {}).length;
+            document.getElementById('adminAttacksCount').textContent = data.stats.total_attacks;
+            document.getElementById('adminSubsCount').textContent = Object.keys(data.subs.subscribed || {}).length;
+        }
+
+        function showUsers() {
+            document.getElementById('usersTable').style.display = 'block';
+            document.getElementById('mailingForm').style.display = 'none';
+            
+            fetch(`/api/admin/stats?user_id=${currentUser.id}`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('usersTableBody');
+                    tbody.innerHTML = '';
+                    
+                    Object.entries(data.users.users || {}).forEach(([id, user]) => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${id}</td>
+                                <td>${user.first_name || '-'}</td>
+                                <td>@${user.username || '-'}</td>
+                                <td>${data.subs.subscribed[id] ? '✅' : '❌'}</td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        function showMailing() {
+            document.getElementById('usersTable').style.display = 'none';
+            document.getElementById('mailingForm').style.display = 'block';
+        }
+
+        async function sendMailing() {
+            const text = document.getElementById('mailingText').value;
+            if (!text) return;
+
+            const response = await fetch('/api/admin/mailing', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    user_id: currentUser.id,
+                    text: text
+                })
+            });
+
+            if (response.ok) {
+                alert('✅ Рассылка запущена!');
+                document.getElementById('mailingText').value = '';
+            }
+        }
+
+        function showAttacks() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            fetch(`/api/admin/stats?user_id=${currentUser.id}`)
+                .then(r => r.json())
+                .then(data => {
+                    content.innerHTML = '<h2>🔥 Последние атаки</h2>';
+                    data.attacks.slice(-10).reverse().forEach(a => {
+                        content.innerHTML += `
+                            <div style="margin:10px 0; padding:10px; background:rgba(255,215,0,0.1); border-radius:10px;">
+                                <div>👤 ID: ${a.user_id}</div>
+                                <div>📱 ${a.phone}</div>
+                                <div>✅ ${a.success}/${a.total}</div>
+                                <div>📅 ${new Date(a.time).toLocaleString()}</div>
+                            </div>
+                        `;
+                    });
+                    modal.style.display = 'block';
+                });
+        }
+
+        function showStats() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            fetch(`/api/admin/stats?user_id=${currentUser.id}`)
+                .then(r => r.json())
+                .then(data => {
+                    content.innerHTML = `
+                        <h2>📊 Детальная статистика</h2>
+                        <div class="profile-row"><span>Всего пользователей:</span> <span>${data.stats.total_users}</span></div>
+                        <div class="profile-row"><span>Всего атак:</span> <span>${data.stats.total_attacks}</span></div>
+                        <div class="profile-row"><span>Запросов:</span> <span>${data.stats.total_requests}</span></div>
+                        <div class="profile-row"><span>Успешных:</span> <span>${data.stats.total_success}</span></div>
+                        <div class="profile-row"><span>Подписчиков:</span> <span>${Object.keys(data.subs.subscribed).length}</span></div>
+                    `;
+                    modal.style.display = 'block';
+                });
+        }
+
+        function clearLogs() {
+            if (confirm('Очистить все данные?')) {
+                alert('Функция в разработке');
+            }
+        }
+
+        function showSubs() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            fetch(`/api/admin/stats?user_id=${currentUser.id}`)
+                .then(r => r.json())
+                .then(data => {
+                    content.innerHTML = '<h2>📱 Подписчики</h2>';
+                    Object.entries(data.subs.subscribed || {}).forEach(([id, sub]) => {
+                        content.innerHTML += `
+                            <div style="margin:5px 0;">✅ ${id} - ${new Date(sub.time).toLocaleString()}</div>
+                        `;
+                    });
+                    modal.style.display = 'block';
+                });
+        }
+
+        // Закрытие модального окна
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Инициализация
+        window.onload = () => {
+            loadUserData();
+            loadStats();
+            loadServices();
+        };
+    </script>
+</body>
+</html>
